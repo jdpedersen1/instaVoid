@@ -409,11 +409,6 @@ repo() {
 }
 
 
-keys () {
-    mkdir -p /mnt/var/db/xbps/keys
-    cp /var/db/xbps/keys/* /mnt/var/db/xbps/keys/
-}
-
 # ...main function calling all other functions
 main() {
     check_deps
