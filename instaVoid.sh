@@ -24,6 +24,8 @@ fs_complete=false
 fs_mount_complete=false
 fs_choice_complete=false
 structure_sel_complete=false
+arch_sel_complete=false
+
 
 # ...for error checking
 script_name="$(basename "$0")"
@@ -43,8 +45,8 @@ subvolumes=false
 # ...handle errors
 handle_error() {
     local exit_code=$?
-    echo "Error in $script_name at line $line_number: Command failed with exit code $exit_code"
-    exit $exit_code
+    echo "Error in $script_name at line $line_number: Command failed with exit code ${exit_code}"
+    exit ${exit_code}
 }
 
 # ...set up error handling
@@ -56,19 +58,19 @@ trap 'handle_error' ERR
 steps() {
     echo -e "\e[32m$(figlet -f slant Outline)\e[0m"
 
-    if [ "$check_complete" = true ]; then
+    if [ "${check_complete}" = true ]; then
         echo -e "(1) Check Dependencies                 \e[32m[ Complete ]\e[0m"
     else
         echo -e "(1) Check Dependencies                 \e[31m[ Incomplete ]\e[0m"
     fi
 
-    if [ "$greeting_complete" = true ]; then
+    if [ "${greeting_complete}" = true ]; then
         echo -e "(2) Greeting                           \e[32m[ Complete ]\e[0m"
     else
         echo -e "(2) Greeting                           \e[31m[ Incomplete ]\e[0m"
     fi
 
-    if [ "$create_list_complete" = true ]; then
+    if [ "${create_list_complete}" = true ]; then
         echo -e "(3) Choose Device                      \e[32m[ Complete ]\e[0m Using Device: \e[31m${device}\e[0m"
     else
         echo -e "(3) Choose Device                      \e[31m[ Incomplete ]\e[0m"
@@ -80,25 +82,25 @@ steps() {
         echo -e "(4) Choose file system                 \e[31m[ Incomplete ]\e[0m"
     fi
 
-    if [ "$structure_sel_complete" = true ] || [[ "${chosenFS}" == Ext4 ]]; then
+    if [ "${structure_sel_complete}" = true ] || [[ "${chosenFS}" == Ext4 ]]; then
         echo -e "(5) File system structure select       \e[32m[ Complete ]\e[0m Structure: \e[31m${selection_choice}\e[0m"
     else
         echo -e "(5) File system structure select       \e[31m[ Incomplete ]\e[0m"
     fi
 
-    if [ "$part_func_complete" = true ]; then
+    if [ "${part_func_complete}" = true ]; then
         echo -e "(6) Partition                          \e[32m[ Complete ]\e[0m Current Partitions: \e[31m${efipart} ${rootpart} ${homepart}\e[0m"
     else
         echo -e "(6) Partition                          \e[31m[ Incomplete ]\e[0m"
     fi
 
-    if [ "$fs_complete" = true ]; then
+    if [ "${fs_complete}" = true ]; then
         echo -e "(7) File System                        \e[32m[ Complete ]\e[0m"
     else
         echo -e "(7) File System                        \e[31m[ Incomplete ]\e[0m"
     fi
 
-    if [ "$fs_mount_complete" = true ]; then
+    if [ "${fs_mount_complete}" = true ]; then
         echo -e "(8) FS mounted                         \e[32m[ Complete ]\e[0m"
     else
         echo -e "(8) FS mounted                         \e[31m[ Incomplete ]\e[0m"
@@ -121,9 +123,9 @@ check_deps() {
     missing_packages=()
     check_complete=false
     for cmd in figlet git sfdisk; do
-        if ! command -v "$cmd" >/dev/null 2>&1; then
-            echo "Command $cmd is missing."
-            missing_packages+=("$cmd")
+        if ! command -v "${cmd}" >/dev/null 2>&1; then
+            echo "Command ${cmd} is missing."
+            missing_packages+=("${cmd}")
         fi
     done
 
@@ -152,16 +154,16 @@ create_dev_list() {
     steps
     echo -e "\e[32m$(figlet -f slant Available Devices)\e[0m"
     lsblk_output=$(lsblk)
-    mapfile -t device_array < <(echo "$lsblk_output" | awk '$0 ~ /^[a-z]/ {print $1}')
+    mapfile -t device_array < <(echo "${lsblk_output}" | awk '$0 ~ /^[a-z]/ {print $1}')
     echo "Select a device:"
     select device in "${device_array[@]}"; do
-        case $device in
+        case ${device} in
             "${device_array[@]}")
-                read -rp "You chose $device, is this correct? [Y/y,N/n]: " answer
-                if [[ $answer = [Y/y] ]];
+                read -rp "You chose ${device}, is this correct? [Y/y,N/n]: " answer
+                if [[ ${answer} = [Y/y] ]];
                 then
                     read -r "Press enter to continue"
-                elif [[ $answer = [N/n] ]];
+                elif [[ ${answer} = [N/n] ]];
                 then
                     clear
                     create_dev_list
@@ -193,7 +195,7 @@ fs_menu() {
 set_filesystem() {
     read -rp "Enter your choice (1/2/3): " choice
 
-    case $choice in
+    case ${choice} in
         1)
             useBtrFS=true
             ;;
@@ -235,7 +237,7 @@ structure_menu() {
 # ...set structure true or false
 set_structure() {
     read -rp "Enter your choice (1/2/3): " selection
-    case $selection in
+    case ${selection} in
         1)
             subvolumes=true
             ;;
@@ -264,17 +266,17 @@ part_func_noSubVol() {
     steps
     echo -e "\e[32m$(figlet -f slant Partition Drive)\e[0m"
     read -rp "Enter partition sizes in this order, efi root home, separated by spaces with no commas: " parts
-    IFS=" " read -r efipart rootpart homepart <<< "$parts"
+    IFS=" " read -r efipart rootpart homepart <<< "${parts}"
 
-    sfdisk /dev/"$device" << EOF
+    sfdisk /dev/"${device}" << EOF
 label: GPT
 ,
 EOF
 
-sudo sfdisk /dev/"$device" << EOF
-, "$efipart"
-, "$rootpart"
-, "$homepart"
+sudo sfdisk /dev/"${device}" << EOF
+, "${efipart}"
+, "${rootpart}"
+, "${homepart}"
 EOF
 
 part_func_complete=true
@@ -286,14 +288,14 @@ part_func_withSubVol() {
     echo -e "\e[32m$(figlet -f slant Partition Drive)\e[0m"
     read -rp "Now partitioning for Btrfs with subvolumes, there will be 2 partitions, boot partition of 1G and second partition for the system with the rest of the disk.\n
 do you want to continue? [Y/y, N/n]: " response
-    if [[ "$response" == [Y/y] ]]; then
-        sfdisk /dev/"$device" << EOF
+    if [[ "${response}" == [Y/y] ]]; then
+        sfdisk /dev/"${device}" << EOF
 label: GPT
 ,
 EOF
 
 
-sfdisk /dev/"$device" << EOF
+sfdisk /dev/"${device}" << EOF
 , 1G
 ,
 EOF
@@ -311,39 +313,39 @@ fs_install() {
     then
         if [[ "${subvolumes}" == false ]];
         then
-            if [[ $device = sd?* ]];
+            if [[ ${device} = sd?* ]];
             then
-                mkfs.fat -F 32 -n BOOT /dev/"$device"1
-                mkfs.btrfs -L ROOT /dev/"$device"2
-                mkfs.btrfs -L HOME /dev/"$device"3
+                mkfs.fat -F 32 -n BOOT /dev/"${device}"1
+                mkfs.btrfs -L ROOT /dev/"${device}2"
+                mkfs.btrfs -L HOME /dev/"$device}3"
             elif [[ $device = nvme??? ]];
             then
-                mkfs.fat -F 32 -L BOOT /dev/"$device"p1
-                mkfs.btrfs -L ROOT /dev/"$device"p2
-                mkfs.btrfs -L HOME /dev/"$device"p3
+                mkfs.fat -F 32 -L BOOT /dev/"${device}p1"
+                mkfs.btrfs -L ROOT /dev/"${device}p2"
+                mkfs.btrfs -L HOME /dev/"${device}p3"
             fi
         else
-            if [[ $device = sd?* ]];
+            if [[ ${device} = sd?* ]];
             then
-                mkfs.fat -F 32 -n BOOT /dev/"$device"1
-                mkfs.btrfs /dev/"$device"2
+                mkfs.fat -F 32 -n BOOT /dev/"${device}1"
+                mkfs.btrfs /dev/"${device}2"
             elif [[ $device = nvme??? ]];
             then
-                mkfs.fat -F 32 -n BOOT /dev/"device"p1
-                mkfs.btrfs /dev/"$device"/p2
+                mkfs.fat -F 32 -n BOOT /dev/"${device}p1"
+                mkfs.btrfs /dev/"${device}p2"
             fi
         fi
     else
-        if [[ $device = sd?* ]];
+        if [[ ${device} = sd?* ]];
         then
-            mkfs.fat -F 32 -n BOOT /dev/"$device"1
-            mkfs.ext4 -L ROOT /dev/"$device"2
-            mkfs.ext4 -L HOME /dev/"$device"3
-        elif [[ $device = nvme??? ]];
+            mkfs.fat -F 32 -n BOOT /dev/"${device}1"
+            mkfs.ext4 -L ROOT /dev/"${device}2"
+            mkfs.ext4 -L HOME /dev/"${device}3"
+        elif [[ ${device} = nvme??? ]];
         then
-            mkfs.fat -F 32 -L BOOT /dev/"$device"p1
-            mkfs.ext4 -L ROOT /dev/"$device"p2
-            mkfs.ext4 -L HOME /dev/"$device"p3
+            mkfs.fat -F 32 -L BOOT /dev/"${device}p1"
+            mkfs.ext4 -L ROOT /dev/"${device}p2"
+            mkfs.ext4 -L HOME /dev/"${device}p3"
         fi
     fi
     lsblk -f
@@ -354,20 +356,20 @@ fs_install() {
 # ...mount file system
 fs_mount() {
     steps
-    if [[ $device = sd?* ]];
+    if [[ ${device} = sd?* ]];
     then
         mount -L ROOT /mnt/
         mkdir -p /mnt/boot/efi
         mkdir -p /mnt/home
         mount -L BOOT /mnt/boot/efi/
         mount -L HOME /mnt/home/
-    elif [[ $device = nvme??? ]];
+    elif [[ ${device} = nvme??? ]];
     then 
-        mount /dev/"$device"p2 /mnt/
+        mount /dev/"${device}p2" /mnt/
         mkdir -p /mnt/boot/efi
         mkdir /mnt/home
-        mount /dev/"$device"p1 /mnt/boot/efi/
-        mount /dev/"$device"p3 /mnt/home/
+        mount /dev/"${device}p1" /mnt/boot/efi/
+        mount /dev/"${device}p3" /mnt/home/
     fi
     fs_mount_complete=true
 }
@@ -382,7 +384,44 @@ repo() {
     echo "3. Quit"
     read -rp "Enter your choice (1/2/3): " choice
 
-    case $choice in
+    case ${choice} in
+        1)
+            REPO=https://repo-default.voidlinux.org/current
+            ;;
+        2)
+            REPO=https://repo-default.voidlinux.org/current/musl
+            ;;
+        3)
+            echo "Exiting."
+            exit 0
+            ;;
+        *)
+            echo "Invalid choice. Please enter 1, 2, or 3."
+            repo
+            ;;
+    esac
+    repo_choice_complete=true
+    if [[ "${choice}" == 1 ]];
+    then
+        chosenRepo=Glibc
+    elif [[ "${choice}" == 2 ]];
+    then
+        chosenRepo=Musl  
+    fi
+}
+
+
+Arch() {
+    steps
+    echo -e "\e[32m$(figlet -f slant Architecture)\e[0m"
+    echo "Choose an architecture:"
+    echo "1. x86_64"
+    echo "2. x86_64-musl"
+    echo 
+    echo "3. Quit"
+    read -rp "Enter your choice (1/2/3): " choice
+
+    case ${choice} in
         1)
             REPO=https://repo-default.voidlinux.org/current
             ;;
@@ -416,7 +455,7 @@ main() {
     create_dev_list
     fs_menu
     set_filesystem
-    if [[ "$useBtrFS" == false ]];
+    if [[ "${useBtrFS}" == false ]];
     then
         part_func_noSubVol
     else
