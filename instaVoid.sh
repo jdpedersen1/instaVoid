@@ -411,6 +411,11 @@ repo() {
 }
 
 
+###########  FIX THIS FUNCTION FIRST   ###########
+
+
+
+
 Arch() {
     steps
     echo -e "\e[32m$(figlet -f slant Architecture)\e[0m"
@@ -437,10 +442,10 @@ Arch() {
             repo
             ;;
     esac
-    repo_choice_complete=true
+    arch_choice_complete=true
     if [[ "${choice}" == 1 ]];
     then
-        chosenRepo=Glibc
+        chosenArch=Glibc
     elif [[ "${choice}" == 2 ]];
     then
         chosenRepo=Musl  
