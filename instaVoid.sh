@@ -59,59 +59,64 @@ steps() {
     echo -e "\e[32m$(figlet -f slant Outline)\e[0m"
 
     if [ "${check_complete}" = true ]; then
-        echo -e "(1) Check Dependencies                 \e[32m[ Complete ]\e[0m"
+        echo -e "(1)  Check Dependencies                 \e[32m[ Complete ]\e[0m"
     else
-        echo -e "(1) Check Dependencies                 \e[31m[ Incomplete ]\e[0m"
+        echo -e "(1)  Check Dependencies                 \e[31m[ Incomplete ]\e[0m"
     fi
 
     if [ "${greeting_complete}" = true ]; then
-        echo -e "(2) Greeting                           \e[32m[ Complete ]\e[0m"
+        echo -e "(2)  Greeting                           \e[32m[ Complete ]\e[0m"
     else
-        echo -e "(2) Greeting                           \e[31m[ Incomplete ]\e[0m"
+        echo -e "(2)  Greeting                           \e[31m[ Incomplete ]\e[0m"
     fi
 
     if [ "${create_list_complete}" = true ]; then
-        echo -e "(3) Choose Device                      \e[32m[ Complete ]\e[0m Using Device: \e[31m${device}\e[0m"
+        echo -e "(3)  Choose Device                      \e[32m[ Complete ]\e[0m Using Device: \e[31m${device}\e[0m"
     else
-        echo -e "(3) Choose Device                      \e[31m[ Incomplete ]\e[0m"
+        echo -e "(3)  Choose Device                      \e[31m[ Incomplete ]\e[0m"
     fi
 
     if [ "${fs_choice_complete}" = true ]; then
-        echo -e "(4) Choose file system                 \e[32m[ Complete ]\e[0m Using: \e[31m${chosenFS}\e[0m"
+        echo -e "(4)  Choose file system                 \e[32m[ Complete ]\e[0m Using: \e[31m${chosenFS}\e[0m"
     else
-        echo -e "(4) Choose file system                 \e[31m[ Incomplete ]\e[0m"
+        echo -e "(4)  Choose file system                 \e[31m[ Incomplete ]\e[0m"
     fi
 
     if [ "${structure_sel_complete}" = true ] || [[ "${chosenFS}" == Ext4 ]]; then
-        echo -e "(5) File system structure select       \e[32m[ Complete ]\e[0m Structure: \e[31m${selection_choice}\e[0m"
+        echo -e "(5)  File system structure select       \e[32m[ Complete ]\e[0m Structure: \e[31m${selection_choice}\e[0m"
     else
-        echo -e "(5) File system structure select       \e[31m[ Incomplete ]\e[0m"
+        echo -e "(5)  File system structure select       \e[31m[ Incomplete ]\e[0m"
     fi
 
     if [ "${part_func_complete}" = true ]; then
-        echo -e "(6) Partition                          \e[32m[ Complete ]\e[0m Current Partitions: \e[31m${efipart} ${rootpart} ${homepart}\e[0m"
+        echo -e "(6)  Partition                          \e[32m[ Complete ]\e[0m Current Partitions: \e[31m${efipart} ${rootpart} ${homepart}\e[0m"
     else
-        echo -e "(6) Partition                          \e[31m[ Incomplete ]\e[0m"
+        echo -e "(6)  Partition                          \e[31m[ Incomplete ]\e[0m"
     fi
 
     if [ "${fs_complete}" = true ]; then
-        echo -e "(7) File System                        \e[32m[ Complete ]\e[0m"
+        echo -e "(7)  File System                        \e[32m[ Complete ]\e[0m"
     else
-        echo -e "(7) File System                        \e[31m[ Incomplete ]\e[0m"
+        echo -e "(7)  File System                        \e[31m[ Incomplete ]\e[0m"
     fi
 
     if [ "${fs_mount_complete}" = true ]; then
-        echo -e "(8) FS mounted                         \e[32m[ Complete ]\e[0m"
+        echo -e "(8)  FS mounted                         \e[32m[ Complete ]\e[0m"
     else
-        echo -e "(8) FS mounted                         \e[31m[ Incomplete ]\e[0m"
+        echo -e "(8)  FS mounted                         \e[31m[ Incomplete ]\e[0m"
     fi
 
     if [ "${repo_choice_complete}" = true ]; then
-        echo -e "(4) Choose repo                        \e[32m[ Complete ]\e[0m Using: \e[31m${chosenRepo}\e[0m"
+        echo -e "(9)  Choose repo                        \e[32m[ Complete ]\e[0m Using: \e[31m${chosenRepo}\e[0m"
     else
-        echo -e "(4) Choose repo                        \e[31m[ Incomplete ]\e[0m"
+        echo -e "(9)  Choose repo                        \e[31m[ Incomplete ]\e[0m"
     fi
 
+    if [ "${arch_sel_complete}" = true ]; then
+        echo -e "(10) Choose Architecture                \e[32m[ Complete ]\e[0m Arch: \e[31m${chosenArch}\e[0m"
+    else 
+        echo -e "(10) Choose Architecture                \e[31m[ Incomplete ]\e[0m"
+    fi
     printf "\n"
 }
 
@@ -422,33 +427,46 @@ Arch() {
     echo "Choose an architecture:"
     echo "1. x86_64"
     echo "2. x86_64-musl"
-    echo 
-    echo "3. Quit"
+    echo "3. i686"
+    echo "4. aarch64"
+    echo "5. exit"
     read -rp "Enter your choice (1/2/3): " choice
 
     case ${choice} in
         1)
-            REPO=https://repo-default.voidlinux.org/current
+            ARCH=x86_64
             ;;
         2)
-            REPO=https://repo-default.voidlinux.org/current/musl
+            AARCH=x86_64-musl
             ;;
         3)
-            echo "Exiting."
+            AARCH=i686
+            ;;
+        4)
+            ARCH=aarch64
+            ;;
+        5)
+            echo "exiting"
             exit 0
             ;;
         *)
-            echo "Invalid choice. Please enter 1, 2, or 3."
-            repo
+            echo "Invalid choice, please select a number 1-5"
+            Arch
             ;;
     esac
-    arch_choice_complete=true
+    arch_sel_complete=true
     if [[ "${choice}" == 1 ]];
     then
-        chosenArch=Glibc
+        chosenArch=x86_64
     elif [[ "${choice}" == 2 ]];
     then
-        chosenRepo=Musl  
+        chosenArch=x86_64-musl  
+    elif [[ "${choice}" == 3 ]];
+    then
+        chosenArch=i686
+    elif [[ "${choice}" == 4 ]];
+    then
+        chosenArch=aarch64
     fi
 }
 
