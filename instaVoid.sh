@@ -357,6 +357,60 @@ fs_install() {
     fs_complete=true
 }
 
+fs_install2() {
+    steps
+
+    if [[ "${useBtrFS}" == true ]]; then
+        mkboot() {
+            mkfs.fat -F 32 -n BOOT "$1"
+        }
+
+        mkroot() {
+            mkfs.btrfs -L ROOT "$1"
+        }
+
+        mkhome() {
+            mkfs.btrfs -L HOME "$1"
+        }
+
+        if [[ "${subvolumes}" == false ]]; then
+            device_prefix=""
+            [[ "${device}" == nvme??? ]] && device_prefix="p"
+
+            mkboot "/dev/${device}1"
+            mkroot "/dev/${device}${device_prefix}2"
+            mkhome "/dev/${device}${device_prefix}3"
+        else
+            device_prefix=""
+            [[ "${device}" == nvme??? ]] && device_prefix="p"
+
+            mkboot "/dev/${device}1"
+            mkroot "/dev/${device}${device_prefix}2"
+        fi
+    else
+        mkboot() {
+            mkfs.fat -F 32 -n BOOT "$1"
+        }
+
+        mkroot() {
+            mkfs.ext4 -L ROOT "$1"
+        }
+
+        mkhome() {
+            mkfs.ext4 -L HOME "$1"
+        }
+
+        device_prefix=""
+        [[ "${device}" == nvme??? ]] && device_prefix="p"
+
+        mkboot "/dev/${device}1"
+        mkroot "/dev/${device}${device_prefix}2"
+        mkhome "/dev/${device}${device_prefix}3"
+    fi
+
+    lsblk -f
+    fs_complete=true
+}
 
 # ...mount file system
 fs_mount() {
@@ -387,9 +441,9 @@ repo() {
     echo "1. Glibc"
     echo "2. Musl"
     echo "3. Quit"
-    read -rp "Enter your choice (1/2/3): " choice
+    read -rp "Enter your choice (1/2/3): " repo_choice
 
-    case ${choice} in
+    case ${repo_choice} in
         1)
             REPO=https://repo-default.voidlinux.org/current
             ;;
@@ -406,10 +460,10 @@ repo() {
             ;;
     esac
     repo_choice_complete=true
-    if [[ "${choice}" == 1 ]];
+    if [[ "${repo_choice}" == 1 ]];
     then
         chosenRepo=Glibc
-    elif [[ "${choice}" == 2 ]];
+    elif [[ "${repo_choice}" == 2 ]];
     then
         chosenRepo=Musl  
     fi
@@ -430,9 +484,9 @@ Arch() {
     echo "3. i686"
     echo "4. aarch64"
     echo "5. exit"
-    read -rp "Enter your choice (1/2/3): " choice
+    read -rp "Enter your choice (1/2/3): " arch_choice
 
-    case ${choice} in
+    case ${arch_choice} in
         1)
             ARCH=x86_64
             ;;
@@ -455,16 +509,16 @@ Arch() {
             ;;
     esac
     arch_sel_complete=true
-    if [[ "${choice}" == 1 ]];
+    if [[ "${arch_choice}" == 1 ]];
     then
         chosenArch=x86_64
-    elif [[ "${choice}" == 2 ]];
+    elif [[ "${arch_choice}" == 2 ]];
     then
         chosenArch=x86_64-musl  
-    elif [[ "${choice}" == 3 ]];
+    elif [[ "${arch_choice}" == 3 ]];
     then
         chosenArch=i686
-    elif [[ "${choice}" == 4 ]];
+    elif [[ "${arch_choice}" == 4 ]];
     then
         chosenArch=aarch64
     fi
@@ -491,7 +545,7 @@ main() {
             part_func_withSubVol
         fi
     fi
-    fs_install
+    fs_install2
     fs_mount
 
 
